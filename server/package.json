@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "env-cmd -f ./.env nodemon app.js"
+        "start": "env-cmd -f ./.env nodemon app.js "
     },
     "keywords": [],
     "author": "",

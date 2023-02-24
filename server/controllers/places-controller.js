@@ -1,36 +1,8 @@
-const { v4: uuidv4 } = require("uuid");
+const mongoose = require("mongoose");
 const HttpError = require("../models/http-error");
 const Place = require("../models/placeModel");
+const User = require("../models/userModel");
 const { getCoordinatesFromAddress } = require("../utils/mapbox-utils");
-
-const DUMMY_PLACES = [
-    {
-        id: "p1",
-        title: "Empire State Building",
-        description: "One of the most famous sky scrapers in the world!",
-        imageUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg",
-        address: "20 W 34th St, New York, NY 10001",
-        location: {
-            lat: 40.7484405,
-            lng: -73.9878584,
-        },
-        creator: "u1",
-    },
-    {
-        id: "p2",
-        title: "Empire State Building",
-        description: "One of the most famous sky scrapers in the world!",
-        imageUrl:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg",
-        address: "20 W 34th St, New York, NY 10001",
-        location: {
-            lat: 40.7484405,
-            lng: -73.9878584,
-        },
-        creator: "u2",
-    },
-];
 
 exports.getPlaceById = async (req, res, next) => {
     const id = req.params.pid;
@@ -63,8 +35,23 @@ exports.getPlaceById = async (req, res, next) => {
 exports.getPlacesByUserId = async (req, res, next) => {
     const userId = req.params.uid;
     try {
-        const places = await Place.find({ creator: userId });
-        if (!places || places.length === 0) {
+        // const places = await Place.find({ creator: userId });
+        // if (!places || places.length === 0) {
+        //     const error = new HttpError(
+        //         `Could not find a place for the provided user id: ${userId}`,
+        //         404
+        //     );
+        //     next(error);
+        // } else {
+        //     res.json({
+        //         message: "success",
+        //         places: places.map((p) => p.toObject({ getters: true })),
+        //     });
+        // }
+
+        // alternative way to get places
+        const userWithPlaces = await User.findById(userId).populate("places");
+        if (!userWithPlaces || userWithPlaces.places.length === 0) {
             const error = new HttpError(
                 `Could not find a place for the provided user id: ${userId}`,
                 404
@@ -73,7 +60,9 @@ exports.getPlacesByUserId = async (req, res, next) => {
         } else {
             res.json({
                 message: "success",
-                places: places.map((p) => p.toObject({ getters: true })),
+                places: userWithPlaces.places.map((p) =>
+                    p.toObject({ getters: true })
+                ),
             });
         }
     } catch (error) {
@@ -105,11 +94,33 @@ exports.createPlace = async (req, res, next) => {
         location: { lat, lng },
         creator,
     };
+
     try {
+        const user = await User.findById(creator);
+        console.log("user", user);
+
+        if (!user) {
+            const err = new HttpError(
+                `Could not find user for provided id: ${creator}`,
+                404
+            );
+            return next(err);
+        }
+
+        // when we need to execute multiple operations which are not directly related to each other. if one of these operations fails independently from each other, then we must make sure to undo all operations. which is to throw error without changing anything in the documents.
+        // mongoose transactions and sessions can help us to achieve this: transactions allows to perform multiple operations in isolation of each other, and to undo these operations. And transactions are built on so-called sessions.
+        // so to work with transactions, we first have to start a session. then we can initiate the transactions. and once the transaction is successful, the session is finished and these transactions are committed.
+        const sess = await mongoose.startSession();
+        sess.startTransaction();
         const newPlace = new Place(p);
-        const createdPlace = await newPlace.save();
+        const createdPlace = await newPlace.save({ session: sess });
+        user.places.push(createdPlace); // same as user.places.push(createdPlace._id);
+        await user.save({ session: sess });
+        await sess.commitTransaction();
+
         res.status(201).json({ message: "success", place: createdPlace });
     } catch (error) {
+        console.log(error);
         const err = new HttpError(
             `Creating place failed, error: ${error.message}`,
             500
@@ -169,25 +180,41 @@ exports.updatePlace = async (req, res, next) => {
 };
 
 exports.deletePlace = async (req, res, next) => {
+    // const placeId = req.params.pid;
+    let place;
     try {
-        const place = await Place.findByIdAndDelete(req.params.pid);
-        if (!place) {
-            const error = new HttpError(
-                `Could not find a place for the provided user id: ${req.params.id}`,
-                404
-            );
-            next(error);
-        } else {
-            res.json({
-                message: "success",
-                place: place.toObject({ getters: true }),
-            });
-        }
+        place = await Place.findById(req.params.pid).populate("creator");
     } catch (error) {
         const err = new HttpError(
             `Somethin went wrong, error: ${error.message}`,
             500
         );
-        next(err);
+        return next(err);
     }
+
+    if (!place) {
+        const error = new HttpError(
+            `Could not find a place for the provided user id: ${req.params.id}`,
+            404
+        );
+        return next(error);
+    }
+    try {
+        const sess = await mongoose.startSession();
+        sess.startTransaction();
+        await place.remove({ session: sess });
+        place.creator.places.pull(place);
+        await place.creator.save({ session: sess });
+        await sess.commitTransaction();
+    } catch (error) {
+        const err = new HttpError(
+            `Somethin went wrong, error: ${error.message}`,
+            500
+        );
+        return next(err);
+    }
+    res.json({
+        message: "Delete success",
+        place: place.toObject({ getters: true }),
+    });
 };

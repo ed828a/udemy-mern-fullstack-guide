@@ -22,13 +22,14 @@ const userSchema = mongoose.Schema({
     },
     places: [
         {
-            type: String,
+            type: mongoose.Types.ObjectId,
             required: false,
+            ref: "Place",
         },
     ],
 });
 
 userSchema.plugin(uniqueValidator);
 
-const User = mongoose.Model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 module.exports = User;
