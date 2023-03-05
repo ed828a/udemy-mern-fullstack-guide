@@ -7,10 +7,9 @@ const UsersList = (props) => {
     if (props.items.length === 0) {
         return (
             <div className="center">
-                <Card style={{ padding: '0.5rem 1rem', background: '#292929'}}>
+                <Card style={{ padding: "0.5rem 1rem", background: "#292929" }}>
                     <h2>No Users Found</h2>
                 </Card>
-                
             </div>
         );
     }
@@ -24,7 +23,7 @@ const UsersList = (props) => {
                         id={user.id}
                         image={user.image}
                         name={user.name}
-                        placeCount={user.places}
+                        placeCount={user.places.length}
                     />
                 ))}
             </ul>

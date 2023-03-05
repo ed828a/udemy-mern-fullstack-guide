@@ -31,7 +31,10 @@ router.post(
 
 router.post(
     "/login",
-    [check("email").isEmail(), check("password").isLength({ min: 5 })],
+    [
+        check("email").normalizeEmail().isEmail(),
+        check("password").isLength({ min: 5 }),
+    ],
     processValidationResult,
     login
 );

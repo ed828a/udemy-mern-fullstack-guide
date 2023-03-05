@@ -22,7 +22,7 @@ export const VALIDATOR_EMAIL = () => ({ type: VALIDATOR_TYPE_EMAIL });
 
 export const validate = (value, validators) => {
     let isValid = true;
-    console.log("validators", validators);
+    // console.log("validators", validators);
 
     for (const validator of validators) {
         if (validator.type === VALIDATOR_TYPE_REQUIRE) {

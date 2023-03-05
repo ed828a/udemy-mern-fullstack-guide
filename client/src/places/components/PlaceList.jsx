@@ -1,5 +1,5 @@
 import "./PlaceList.css";
-import React from "react";
+import React, { useState } from "react";
 import Card from "../../shared/components/UIElements/Card";
 import PlaceItem from "./PlaceItem";
 import Button from "../../shared/components/FormElements/Button";
@@ -18,18 +18,22 @@ const PlaceList = (props) => {
 
     return (
         <ul className="place-list">
-            {props.items.map((place) => (
-                <PlaceItem
-                    key={place.id}
-                    id={place.id}
-                    image={place.imageUrl}
-                    title={place.title}
-                    description={place.description}
-                    address={place.address}
-                    creatorId={place.creator}
-                    coordinates={place.location}
-                />
-            ))}
+            {props.items.map((place) => {
+                console.log("place", place);
+                return (
+                    <PlaceItem
+                        key={place.id}
+                        id={place.id}
+                        image={place.image}
+                        title={place.title}
+                        description={place.description}
+                        address={place.address}
+                        creatorId={place.creator}
+                        coordinates={place.location}
+                        onDelete={() => props.onDeletePlace(place.id)}
+                    />
+                );
+            })}
         </ul>
     );
 };
