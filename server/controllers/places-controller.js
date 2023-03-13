@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const fs = require("fs");
+const path = require("path");
 const HttpError = require("../models/http-error");
 const Place = require("../models/placeModel");
 const User = require("../models/userModel");
@@ -76,6 +78,7 @@ exports.getPlacesByUserId = async (req, res, next) => {
 
 exports.createPlace = async (req, res, next) => {
     const { title, description, address, creator } = req.body;
+    console.log("req.body", req.body);
     let coordinates;
     try {
         coordinates = await getCoordinatesFromAddress(address);
@@ -89,7 +92,7 @@ exports.createPlace = async (req, res, next) => {
     const p = {
         title,
         description,
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/NYC_Empire_State_Building.jpg/640px-NYC_Empire_State_Building.jpg",
+        image: req.file.path,
         address,
         location: { lat, lng },
         creator,
@@ -213,6 +216,12 @@ exports.deletePlace = async (req, res, next) => {
         );
         return next(err);
     }
+
+    console.log(path.join(__dirname, place.image));
+    fs.unlink(path.join(__dirname, "..", place.image), (err, file) => {
+        console.log(err);
+    });
+
     res.json({
         message: "Delete success",
         place: place.toObject({ getters: true }),

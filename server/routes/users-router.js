@@ -10,6 +10,7 @@ const {
 const {
     processValidationResult,
 } = require("../controllers/validator-controller");
+const fileUpload = require("../middlewares/file-upload");
 
 const router = express.Router();
 
@@ -19,6 +20,7 @@ router.route("/:uid").get(getUserById);
 
 router.post(
     "/signup",
+    fileUpload.single("image"), // using multer. image is the key in request body
     [
         check("name").isLength({ min: 3 }),
         check("email").normalizeEmail().isEmail(),

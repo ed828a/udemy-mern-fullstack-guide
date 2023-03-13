@@ -12,6 +12,7 @@ import { useHttpClient } from "../../shared/hooks/http-hook";
 import { AuthContext } from "../../shared/context/auth-context";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 
 const initialInputs = {
     title: {
@@ -24,6 +25,10 @@ const initialInputs = {
     },
     address: {
         value: "",
+        isValid: false,
+    },
+    image: {
+        value: null,
         isValid: false,
     },
 };
@@ -39,17 +44,18 @@ const NewPlace = () => {
     const submitHandler = async (event) => {
         event.preventDefault();
         // send form data to server
+        const formData = new FormData();
+        console.log("formState.inputs", formState.inputs);
+        formData.append("title", formState.inputs.title.value);
+        formData.append("description", formState.inputs.description.value);
+        formData.append("address", formState.inputs.address.value);
+        formData.append("creator", auth.userId);
+        formData.append("image", formState.inputs.image.value);
         try {
             const responseData = await sendRequest(
                 "http://localhost:5000/api/places",
                 "POST",
-                JSON.stringify({
-                    title: formState.inputs.title.value,
-                    description: formState.inputs.description.value,
-                    address: formState.inputs.address.value,
-                    creator: auth.userId,
-                }),
-                { "Content-Type": "application/json" }
+                formData
             );
             console.log(responseData);
             // redirect the user to a different page.
@@ -92,6 +98,12 @@ const NewPlace = () => {
                     validators={[VALIDATOR_REQUIRE()]}
                     errorText="Please enter a valid address."
                     onInput={inputHandler}
+                />
+                <ImageUpload
+                    id="image"
+                    center
+                    onInput={inputHandler}
+                    errorText="Please provide an image"
                 />
                 <Button type="submit" disabled={!formState.isValid}>
                     Add Place

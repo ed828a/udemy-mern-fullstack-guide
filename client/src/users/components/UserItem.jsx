@@ -5,12 +5,16 @@ import { Link } from "react-router-dom";
 import Card from "../../shared/components/UIElements/Card";
 
 const UserItem = ({ id, image, name, placeCount }) => {
+    console.log("image", image);
     return (
         <li className="user-item">
-            <Card className="user-item__content">                
-                <Link to={`/${id}/places`}>
+            <Card className="user-item__content">
+                <Link to={!!placeCount ? `/${id}/places` : "/404"}>
                     <div className="user-item__image">
-                        <Avatar image={image} alt={name} />
+                        <Avatar
+                            image={`http://localhost:5000/${image}`}
+                            alt={name}
+                        />
                     </div>
                     <div className="user-item__info">
                         <h2>{name}</h2>

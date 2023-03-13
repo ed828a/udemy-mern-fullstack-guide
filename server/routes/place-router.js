@@ -12,6 +12,7 @@ const {
 const {
     processValidationResult,
 } = require("../controllers/validator-controller");
+const fileUpload = require("../middlewares/file-upload");
 const HttpError = require("../models/http-error");
 
 const router = express.Router();
@@ -34,6 +35,7 @@ router
     .route("/")
     .get(getPlaces)
     .post(
+        fileUpload.single("image"),
         [
             check("title").not().isEmpty(),
             check("description").isLength({ min: 5 }),

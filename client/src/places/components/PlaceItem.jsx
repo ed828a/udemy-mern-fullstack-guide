@@ -53,7 +53,7 @@ const PlaceItem = (props) => {
                 footerClass="place-item__modal-actions"
                 footer={
                     <Button
-                        style={{ "margin-top": "1rem" }}
+                        style={{ marginTop: "1rem" }}
                         onClick={closeMapHandler}
                     >
                         Close
@@ -93,7 +93,10 @@ const PlaceItem = (props) => {
                 >
                     {isLoading && <LoadingSpinner asOverlay />}
                     <div className="place-item__image">
-                        <img src={props.image} alt={props.title} />
+                        <img
+                            src={`http://localhost:5000/${props.image}`}
+                            alt={props.title}
+                        />
                     </div>
                     <div className="place-item__info">
                         <h2>{props.title}</h2>

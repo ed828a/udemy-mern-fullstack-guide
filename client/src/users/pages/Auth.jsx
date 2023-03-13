@@ -14,6 +14,7 @@ import { AuthContext } from "../../shared/context/auth-context";
 import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import { useHttpClient } from "../../shared/hooks/http-hook";
+import ImageUpload from "../../shared/components/FormElements/ImageUpload";
 
 const initialInputs = {
     email: {
@@ -42,6 +43,7 @@ const Auth = () => {
     const authSubmitHandler = async (event) => {
         event.preventDefault();
         console.log("Auth...");
+        console.log(formState.inputs);
         try {
             let responseData;
             if (isLoginMode) {
@@ -57,17 +59,17 @@ const Auth = () => {
                     } // headers
                 );
             } else {
+                // FormData is a built-in browser API. in FormData, you can add both text data and file/binary data
+                const formData = new FormData();
+                formData.append("email", formState.inputs.email.value);
+                formData.append("password", formState.inputs.password.value);
+                formData.append("name", formState.inputs.name.value);
+                formData.append("image", formState.inputs.image.value);
+
                 responseData = await sendRequest(
                     "http://localhost:5000/api/users/signup",
                     "POST",
-                    JSON.stringify({
-                        name: formState.inputs.name.value,
-                        email: formState.inputs.email.value,
-                        password: formState.inputs.password.value,
-                    }),
-                    {
-                        "Content-Type": "application/json",
-                    }
+                    formData // fetch will automatically set proper headers for formdata
                 );
             }
 
@@ -83,20 +85,27 @@ const Auth = () => {
         event.preventDefault();
 
         if (!isLoginMode) {
+            // sign up
             setFormData(
                 {
                     ...formState.inputs,
                     name: undefined,
+                    image: undefined,
                 },
                 formState.inputs.email.isValid &&
                     formState.inputs.password.isValid
             );
         } else {
+            // log in
             setFormData(
                 {
                     ...formState.inputs,
                     name: {
                         value: "",
+                        isValid: false,
+                    },
+                    image: {
+                        value: null,
                         isValid: false,
                     },
                 },
@@ -113,7 +122,7 @@ const Auth = () => {
             <ErrorModal error={error} onClear={clearError} />
             <Card className="authentication" style={{ background: "white" }}>
                 {isLoading && <LoadingSpinner asOverlay />}
-                <h2>Login Required</h2>
+                <h2>{isLoginMode ? "Login" : "Sign up"} Required</h2>
                 <hr />
                 <form className="" onSubmit={authSubmitHandler}>
                     {!isLoginMode && (
@@ -128,6 +137,14 @@ const Auth = () => {
                             ]}
                             errorText="Please enter a valid name (at least 3 charaters long)."
                             onInput={inputHandler}
+                        />
+                    )}
+                    {!isLoginMode && (
+                        <ImageUpload
+                            id="image"
+                            center
+                            onInput={inputHandler}
+                            errorText="Please provide an image"
                         />
                     )}
                     <Input

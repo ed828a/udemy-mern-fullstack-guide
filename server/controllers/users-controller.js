@@ -1,3 +1,4 @@
+const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const User = require("../models/userModel");
 
@@ -44,7 +45,17 @@ exports.getUserById = async (req, res, next) => {
 };
 
 exports.signup = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return next(
+            new HttpError("Invalid inputs passed, please check your data.", 422)
+        );
+    }
+
+    //multer interpretes all text files in formData into the body object on the request.
     const { name, email, password } = req.body;
+    console.log("req.body", req.body);
+
     try {
         const existingUser = await User.findOne({ email: email });
         if (existingUser) {
@@ -58,7 +69,7 @@ exports.signup = async (req, res, next) => {
                 name,
                 email,
                 password,
-                image: "https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                image: req.file.path, // this is from multer
                 places: [],
             });
             await user.save();
