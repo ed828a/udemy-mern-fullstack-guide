@@ -77,7 +77,7 @@ exports.getPlacesByUserId = async (req, res, next) => {
 };
 
 exports.createPlace = async (req, res, next) => {
-    const { title, description, address, creator } = req.body;
+    const { title, description, address } = req.body;
     console.log("req.body", req.body);
     let coordinates;
     try {
@@ -95,11 +95,11 @@ exports.createPlace = async (req, res, next) => {
         image: req.file.path,
         address,
         location: { lat, lng },
-        creator,
+        creator: req.userData.userId,
     };
 
     try {
-        const user = await User.findById(creator);
+        const user = await User.findById(req.userData.userId);
         console.log("user", user);
 
         if (!user) {
@@ -153,26 +153,40 @@ exports.updatePlace = async (req, res, next) => {
     // console.log("req.params.pid", req.params.pid);
     const { title, description } = req.body;
     try {
-        const place = await Place.findByIdAndUpdate(
-            req.params.pid,
-            {
-                title,
-                description,
-            },
-            { new: true }
-        );
+        const place = await Place.findById(req.params.pid);
+
+        // const place = await Place.findByIdAndUpdate(
+        //     req.params.pid,
+        //     {
+        //         title,
+        //         description,
+        //     },
+        //     { new: true }
+        // );
         if (!place) {
             const error = new HttpError(
                 `Could not find a place for the provided user id: ${req.params.id}`,
                 404
             );
-            next(error);
-        } else {
-            res.json({
-                message: "success",
-                place: place.toObject({ getters: true }),
-            });
+            return next(error);
         }
+        // because creator is ObjectId, it should be toString().
+        if (place.creator.toString() !== req.userData.userId) {
+            const error = new HttpError(
+                `You are not allowed to edit this place.`,
+                401
+            );
+            return next(error);
+        }
+
+        place.title = title;
+        place.description = description;
+        await place.save();
+
+        res.json({
+            message: "success",
+            place: place.toObject({ getters: true }),
+        });
     } catch (error) {
         const err = new HttpError(
             `Somethin went wrong, error: ${error.message}`,
@@ -202,6 +216,15 @@ exports.deletePlace = async (req, res, next) => {
         );
         return next(error);
     }
+
+    if (place.creator.id !== req.userData.userId) {
+        const error = new HttpError(
+            `You are not allowed to delete this place.`,
+            401
+        );
+        return next(error);
+    }
+
     try {
         const sess = await mongoose.startSession();
         sess.startTransaction();

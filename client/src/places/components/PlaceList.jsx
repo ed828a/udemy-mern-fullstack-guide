@@ -5,6 +5,7 @@ import PlaceItem from "./PlaceItem";
 import Button from "../../shared/components/FormElements/Button";
 
 const PlaceList = (props) => {
+    console.log("PlaceList props: ", props);
     if (props.items.length === 0) {
         return (
             <div className="place-list center">

@@ -45,7 +45,9 @@ const UpdatePlace = () => {
                     `http://localhost:5000/api/places/${pid}`,
                     "GET",
                     null,
-                    { "Content-type": "application/json" }
+                    {
+                        "Content-type": "application/json",
+                    }
                 );
 
                 setLoadedPlace(responseData.place);
@@ -86,7 +88,10 @@ const UpdatePlace = () => {
                     title: formState.inputs.title.value,
                     description: formState.inputs.description.value,
                 }),
-                { "Content-Type": "application/json" }
+                {
+                    "Content-Type": "application/json",
+                    Authorization: "Bearer " + auth.token,
+                }
             );
             console.log(responseData);
             navigate(`/${auth.userId}/places`, { push: true });

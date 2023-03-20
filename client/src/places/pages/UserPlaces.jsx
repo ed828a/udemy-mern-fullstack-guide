@@ -31,9 +31,18 @@ const UserPlaces = () => {
             prevPlaces.filter((place) => place.id !== pid)
         );
 
+    const regex = /Could not find a place for the provided user id/gm;
+    console.log(!regex.test(error));
     return (
         <React.Fragment>
-            <ErrorModal error={error} onClear={clearError} />
+            {regex.test(error) ? (
+                <PlaceList
+                    items={loadedPlaces}
+                    onDeletePlace={deletePlaceHandler}
+                />
+            ) : (
+                <ErrorModal error={error} onClear={clearError} />
+            )}
             {isLoading && (
                 <div className="center">
                     <LoadingSpinner />

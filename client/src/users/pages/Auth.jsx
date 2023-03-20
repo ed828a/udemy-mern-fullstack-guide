@@ -75,7 +75,7 @@ const Auth = () => {
 
             console.log(responseData);
 
-            auth.login(responseData?.user?.id);
+            auth.login(responseData?.user?.id, responseData.token);
         } catch (error) {
             console.log(error);
         }

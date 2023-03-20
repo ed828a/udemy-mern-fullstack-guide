@@ -19,16 +19,18 @@ export const useHttpClient = () => {
                     signal: httpAbortCtrl.signal,
                     // link abortController to this http request, so that we can use this httpAbortCtrl to cancel this request.
                 });
+                console.log(response);
                 const responseData = await response.json();
                 activeHttpRequests.current = activeHttpRequests.current.filter(
                     (reqCtrl) => reqCtrl !== httpAbortCtrl
                 );
-
                 console.log(responseData);
+
+                setIsLoading(false);
+
                 if (!response.ok) {
                     throw new Error(responseData.message);
                 }
-                setIsLoading(false);
 
                 return responseData;
             } catch (error) {

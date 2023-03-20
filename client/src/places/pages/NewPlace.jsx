@@ -49,13 +49,16 @@ const NewPlace = () => {
         formData.append("title", formState.inputs.title.value);
         formData.append("description", formState.inputs.description.value);
         formData.append("address", formState.inputs.address.value);
-        formData.append("creator", auth.userId);
+        // formData.append("creator", auth.userId); // get userId from backend
         formData.append("image", formState.inputs.image.value);
         try {
             const responseData = await sendRequest(
                 "http://localhost:5000/api/places",
                 "POST",
-                formData
+                formData,
+                {
+                    Authorization: "Bearer " + auth.token,
+                }
             );
             console.log(responseData);
             // redirect the user to a different page.

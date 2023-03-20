@@ -1,4 +1,7 @@
 const { validationResult } = require("express-validator");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
 const HttpError = require("../models/http-error");
 const User = require("../models/userModel");
 
@@ -65,14 +68,38 @@ exports.signup = async (req, res, next) => {
             );
             next(error);
         } else {
+            const hashpassword = await bcrypt.hash(password, 12);
             const user = new User({
                 name,
                 email,
-                password,
+                password: hashpassword,
                 image: req.file.path, // this is from multer
                 places: [],
             });
             await user.save();
+
+            // generate a token
+            const token = jwt.sign(
+                { userId: user.id, email: user.email },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "10h",
+                }
+            );
+
+            // set cookie
+            const cookieOptions = {
+                expires: new Date(
+                    Date.now() +
+                        process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+                ),
+                httpOnly: true, // make sure this cookie can not be accessed by browser
+            };
+            if (process.env.NODE_ENV === "production") {
+                cookieOptions.secure = true; // only for https
+            }
+            res.cookie("jwt", token, cookieOptions);
+
             res.status(201).json({
                 message: "success",
                 user: user.toObject({
@@ -81,6 +108,7 @@ exports.signup = async (req, res, next) => {
                         delete ret.password;
                     },
                 }),
+                token,
             });
         }
     } catch (error) {
@@ -94,13 +122,38 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
+    const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email: req.body.email });
-        if (!user || user.password !== req.body.password) {
+        const user = await User.findOne({ email: email });
+        const isValidPassword = await bcrypt.compare(password, user?.password);
+        if (!user || !isValidPassword) {
             next(
-                new HttpError("Invalid credentials, could not log you in ", 401)
+                new HttpError("Invalid credentials, could not log you in ", 403)
             );
         } else {
+            // generate a token
+            const token = jwt.sign(
+                { userId: user.id, email: user.email },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "11h",
+                }
+            );
+
+            // set cookie
+            const cookieOptions = {
+                expires: new Date(
+                    Date.now() +
+                        process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+                ),
+                httpOnly: true, // make sure this cookie can not be accessed by browser
+            };
+            if (process.env.NODE_ENV === "production") {
+                cookieOptions.secure = true; // only for https
+            }
+
+            res.cookie("jwt", token, cookieOptions);
+
             res.json({
                 message: "login success",
                 user: user.toObject({
@@ -109,6 +162,7 @@ exports.login = async (req, res, next) => {
                         delete ret.password;
                     },
                 }),
+                token: token,
             });
         }
     } catch (error) {

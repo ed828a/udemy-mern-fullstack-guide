@@ -33,7 +33,9 @@ const PlaceItem = (props) => {
                 `http://localhost:5000/api/places/${props.id}`,
                 "DELETE",
                 null,
-                { "Content-Type": "application/json" }
+                {
+                    Authorization: "Bearer " + auth.token,
+                }
             );
             props.onDelete();
             navigate(`/${auth.userId}/places`, { push: true });
