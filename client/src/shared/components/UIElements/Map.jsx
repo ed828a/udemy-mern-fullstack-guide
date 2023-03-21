@@ -2,8 +2,7 @@ import "./Map.css";
 import React, { /* useState, */ useEffect, useRef } from "react";
 
 import mapboxgl from "mapbox-gl";
-mapboxgl.accessToken =
-    "pk.eyJ1IjoiZWQ4MjhhIiwiYSI6ImNrd2lmcmk2ejBuM3gybmw1NnR6NjNzaDQifQ.Z_ydEO2ynIQKGDmRezk3bQ";
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_PUBLIC_ACCESS_TOKEN;
 
 const Map = (props) => {
     const mapContainer = useRef(null); //The mapContainer ref specifies that App should be drawn to the HTML page in a new <div> element.

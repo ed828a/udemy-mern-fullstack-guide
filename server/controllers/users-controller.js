@@ -135,24 +135,12 @@ exports.login = async (req, res, next) => {
             const token = jwt.sign(
                 { userId: user.id, email: user.email },
                 process.env.JWT_SECRET,
-                {
-                    expiresIn: "11h",
-                }
+                { expiresIn: "11h" }
             );
 
-            // set cookie
-            const cookieOptions = {
-                expires: new Date(
-                    Date.now() +
-                        process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-                ),
-                httpOnly: true, // make sure this cookie can not be accessed by browser
-            };
             if (process.env.NODE_ENV === "production") {
                 cookieOptions.secure = true; // only for https
             }
-
-            res.cookie("jwt", token, cookieOptions);
 
             res.json({
                 message: "login success",

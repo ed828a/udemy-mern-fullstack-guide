@@ -12,7 +12,7 @@ const UserItem = ({ id, image, name, placeCount }) => {
                 <Link to={!!placeCount ? `/${id}/places` : "/404"}>
                     <div className="user-item__image">
                         <Avatar
-                            image={`http://localhost:5000/${image}`}
+                            image={`${process.env.REACT_APP_ASSETS_URL}/${image}`}
                             alt={name}
                         />
                     </div>

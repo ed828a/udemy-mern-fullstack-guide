@@ -42,7 +42,7 @@ const UpdatePlace = () => {
         const fetchPlaceById = async (pid) => {
             try {
                 const responseData = await sendRequest(
-                    `http://localhost:5000/api/places/${pid}`,
+                    `${process.env.REACT_APP_BACKEND_URL}/places/${pid}`,
                     "GET",
                     null,
                     {
@@ -82,7 +82,7 @@ const UpdatePlace = () => {
         console.log(formState.inputs);
         try {
             const responseData = await sendRequest(
-                `http://localhost:5000/api/places/${placeId}`,
+                `${process.env.REACT_APP_BACKEND_URL}/places/${placeId}`,
                 "PATCH",
                 JSON.stringify({
                     title: formState.inputs.title.value,
