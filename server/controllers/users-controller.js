@@ -8,6 +8,8 @@ const User = require("../models/userModel");
 exports.getUsers = async (req, res, next) => {
     try {
         const users = await User.find({}, "-password");
+        console.log("users: ", users);
+
         res.json({
             message: "success",
             users: users.map((u) => u.toObject({ getters: true })),

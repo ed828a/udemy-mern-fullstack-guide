@@ -84,7 +84,7 @@ function App() {
                     }
                 />
                 <Route
-                    path="auth"
+                    path="/auth"
                     element={
                         <SuspensedElement>
                             <Auth />
